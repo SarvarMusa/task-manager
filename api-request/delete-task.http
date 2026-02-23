@@ -1,5 +1,1 @@
-### GET request to example server
-GET https://examples.http-client.intellij.net/get
-    ?generated-in=IntelliJ IDEA
-
-###
+DELETE http://localhost:8080/tasks/823412ca-1cc5-4512-999e-11b8d25190b0

@@ -11,8 +11,8 @@
     <groupId>org.task</groupId>
     <artifactId>task-manager</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>task-maganer</name>
-    <description>task-maganer</description>
+    <name>task-manager</name>
+    <description>task-manager</description>
     <url/>
     <licenses>
         <license/>

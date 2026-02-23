@@ -15,6 +15,19 @@ public class Task {
     private String title;
     private boolean done;
 
+    public Task() {
+    }
+
+    public Task(String title) {
+        this.title = title;
+        this.done = false;
+    }
+
+    public Task(String title, boolean done) {
+        this.title = title;
+        this.done = done;
+    }
+
     public UUID getId() {
         return id;
     }
