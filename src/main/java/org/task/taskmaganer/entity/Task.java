@@ -22,15 +22,20 @@ public class Task {
     @Column(name = "description", length = 500)
     private String description;
 
-    @Column(name = "priority", nullable = false, length = 20)
-    private String priority;
+    @Column(name = "priority", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TaskPriority priority;
 
-    @Column(name = "status", nullable = false, length = 20)
-    private String status;
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TaskStatus status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(name = "due_date")
+    private LocalDateTime dueDate;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
@@ -46,7 +51,7 @@ public class Task {
     public Task() {
     }
 
-    public Task(String title, String description, String priority, String status, User user) {
+    public Task(String title, String description, TaskPriority priority, TaskStatus status, User user) {
         this.title = title;
         this.description = description;
         this.priority = priority;
@@ -79,19 +84,19 @@ public class Task {
         this.description = description;
     }
 
-    public String getPriority() {
+    public TaskPriority getPriority() {
         return priority;
     }
 
-    public void setPriority(String priority) {
+    public void setPriority(TaskPriority priority) {
         this.priority = priority;
     }
 
-    public String getStatus() {
+    public TaskStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(TaskStatus status) {
         this.status = status;
     }
 
@@ -101,6 +106,14 @@ public class Task {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public LocalDateTime getDueDate() {
+        return dueDate;
+    }
+
+    public void setDueDate(LocalDateTime dueDate) {
+        this.dueDate = dueDate;
     }
 
     public Boolean getIsActive() {

@@ -38,8 +38,8 @@ public class TaskResponse {
         this.id = task.getId().toString();
         this.title = task.getTitle();
         this.description = task.getDescription();
-        this.priority = task.getPriority();
-        this.status = task.getStatus();
+        this.priority = task.getPriority().name();
+        this.status = task.getStatus().name();
         this.userId = task.getUser().getId().toString();
         this.username = task.getUser().getUsername();
         this.isActive = task.getIsActive();

@@ -1,20 +1,23 @@
 package org.task.taskmaganer.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.task.taskmaganer.dto.request.CreateTaskRequest;
 import org.task.taskmaganer.dto.request.UpdateTaskRequest;
+import org.task.taskmaganer.dto.response.PageResponse;
 import org.task.taskmaganer.dto.response.TaskResponse;
 import org.task.taskmaganer.entity.Task;
+import org.task.taskmaganer.entity.TaskPriority;
+import org.task.taskmaganer.entity.TaskStatus;
 import org.task.taskmaganer.entity.User;
 import org.task.taskmaganer.exception.ResourceNotFoundException;
 import org.task.taskmaganer.repository.TaskRepository;
 import org.task.taskmaganer.repository.UserRepository;
 
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -52,76 +55,76 @@ public class TaskService {
         return new TaskResponse(task);
     }
 
-    public List<TaskResponse> getAllTasks() {
-        return taskRepository.findAll().stream()
-                .map(TaskResponse::new)
-                .collect(Collectors.toList());
+    public PageResponse<TaskResponse> getAllTasks(Pageable pageable) {
+        Page<Task> taskPage = taskRepository.findAll(pageable);
+        Page<TaskResponse> responsePage = taskPage.map(TaskResponse::new);
+        return new PageResponse<>(responsePage);
     }
 
-    public List<TaskResponse> getAllActiveTasks() {
-        return taskRepository.findAllActiveTasks().stream()
-                .map(TaskResponse::new)
-                .collect(Collectors.toList());
+    public PageResponse<TaskResponse> getAllActiveTasks(Pageable pageable) {
+        Page<Task> taskPage = taskRepository.findAllActiveTasks(pageable);
+        Page<TaskResponse> responsePage = taskPage.map(TaskResponse::new);
+        return new PageResponse<>(responsePage);
     }
 
-    public List<TaskResponse> getTasksByStatus(String status) {
-        return taskRepository.findByStatus(status).stream()
-                .map(TaskResponse::new)
-                .collect(Collectors.toList());
+    public PageResponse<TaskResponse> getTasksByStatus(TaskStatus status, Pageable pageable) {
+        Page<Task> taskPage = taskRepository.findByStatus(status, pageable);
+        Page<TaskResponse> responsePage = taskPage.map(TaskResponse::new);
+        return new PageResponse<>(responsePage);
     }
 
-    public List<TaskResponse> getTasksByPriority(String priority) {
-        return taskRepository.findByPriority(priority).stream()
-                .map(TaskResponse::new)
-                .collect(Collectors.toList());
+    public PageResponse<TaskResponse> getTasksByPriority(TaskPriority priority, Pageable pageable) {
+        Page<Task> taskPage = taskRepository.findByPriority(priority, pageable);
+        Page<TaskResponse> responsePage = taskPage.map(TaskResponse::new);
+        return new PageResponse<>(responsePage);
     }
 
-    public List<TaskResponse> getActiveTasksByStatus(String status) {
-        return taskRepository.findAllActiveTasksByStatus(status).stream()
-                .map(TaskResponse::new)
-                .collect(Collectors.toList());
+    public PageResponse<TaskResponse> getActiveTasksByStatus(TaskStatus status, Pageable pageable) {
+        Page<Task> taskPage = taskRepository.findAllActiveTasksByStatus(status, pageable);
+        Page<TaskResponse> responsePage = taskPage.map(TaskResponse::new);
+        return new PageResponse<>(responsePage);
     }
 
-    public List<TaskResponse> getActiveTasksByPriority(String priority) {
-        return taskRepository.findAllActiveTasksByPriority(priority).stream()
-                .map(TaskResponse::new)
-                .collect(Collectors.toList());
+    public PageResponse<TaskResponse> getActiveTasksByPriority(TaskPriority priority, Pageable pageable) {
+        Page<Task> taskPage = taskRepository.findAllActiveTasksByPriority(priority, pageable);
+        Page<TaskResponse> responsePage = taskPage.map(TaskResponse::new);
+        return new PageResponse<>(responsePage);
     }
 
-    public List<TaskResponse> getTasksByUserId(UUID userId) {
+    public PageResponse<TaskResponse> getTasksByUserId(UUID userId, Pageable pageable) {
         if (!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException("User not found with id: " + userId);
         }
-        return taskRepository.findByUserId(userId).stream()
-                .map(TaskResponse::new)
-                .collect(Collectors.toList());
+        Page<Task> taskPage = taskRepository.findByUserId(userId, pageable);
+        Page<TaskResponse> responsePage = taskPage.map(TaskResponse::new);
+        return new PageResponse<>(responsePage);
     }
 
-    public List<TaskResponse> getActiveTasksByUserId(UUID userId) {
+    public PageResponse<TaskResponse> getActiveTasksByUserId(UUID userId, Pageable pageable) {
         if (!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException("User not found with id: " + userId);
         }
-        return taskRepository.findActiveTasksByUserId(userId).stream()
-                .map(TaskResponse::new)
-                .collect(Collectors.toList());
+        Page<Task> taskPage = taskRepository.findActiveTasksByUserId(userId, pageable);
+        Page<TaskResponse> responsePage = taskPage.map(TaskResponse::new);
+        return new PageResponse<>(responsePage);
     }
 
-    public List<TaskResponse> getTasksByUserIdAndStatus(UUID userId, String status) {
+    public PageResponse<TaskResponse> getTasksByUserIdAndStatus(UUID userId, TaskStatus status, Pageable pageable) {
         if (!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException("User not found with id: " + userId);
         }
-        return taskRepository.findByUserIdAndStatus(userId, status).stream()
-                .map(TaskResponse::new)
-                .collect(Collectors.toList());
+        Page<Task> taskPage = taskRepository.findByUserIdAndStatus(userId, status, pageable);
+        Page<TaskResponse> responsePage = taskPage.map(TaskResponse::new);
+        return new PageResponse<>(responsePage);
     }
 
-    public List<TaskResponse> getTasksByUserIdAndPriority(UUID userId, String priority) {
+    public PageResponse<TaskResponse> getTasksByUserIdAndPriority(UUID userId, TaskPriority priority, Pageable pageable) {
         if (!userRepository.existsById(userId)) {
             throw new ResourceNotFoundException("User not found with id: " + userId);
         }
-        return taskRepository.findByUserIdAndPriority(userId, priority).stream()
-                .map(TaskResponse::new)
-                .collect(Collectors.toList());
+        Page<Task> taskPage = taskRepository.findByUserIdAndPriority(userId, priority, pageable);
+        Page<TaskResponse> responsePage = taskPage.map(TaskResponse::new);
+        return new PageResponse<>(responsePage);
     }
 
     public TaskResponse updateTask(UUID id, UpdateTaskRequest request) {

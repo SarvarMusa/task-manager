@@ -1,34 +1,31 @@
 package org.task.taskmaganer.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
+import org.task.taskmaganer.entity.TaskPriority;
+import org.task.taskmaganer.entity.TaskStatus;
 
 import java.util.Objects;
 
 public class CreateTaskRequest {
 
-    @NotBlank(message = "Title is required")
-    @Size(min = 1, max = 100, message = "Title must be between 1 and 100 characters")
+    @NotNull(message = "Title is required")
     private String title;
 
-    @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
 
-    @NotBlank(message = "Priority is required")
-    @Size(max = 20, message = "Priority must not exceed 20 characters")
-    private String priority;
+    @NotNull(message = "Priority is required")
+    private TaskPriority priority;
 
-    @NotBlank(message = "Status is required")
-    @Size(max = 20, message = "Status must not exceed 20 characters")
-    private String status;
+    @NotNull(message = "Status is required")
+    private TaskStatus status;
 
-    @NotBlank(message = "User ID is required")
+    @NotNull(message = "User ID is required")
     private String userId;
 
     public CreateTaskRequest() {
     }
 
-    public CreateTaskRequest(String title, String description, String priority, String status, String userId) {
+    public CreateTaskRequest(String title, String description, TaskPriority priority, TaskStatus status, String userId) {
         this.title = title;
         this.description = description;
         this.priority = priority;
@@ -52,19 +49,19 @@ public class CreateTaskRequest {
         this.description = description;
     }
 
-    public String getPriority() {
+    public TaskPriority getPriority() {
         return priority;
     }
 
-    public void setPriority(String priority) {
+    public void setPriority(TaskPriority priority) {
         this.priority = priority;
     }
 
-    public String getStatus() {
+    public TaskStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(TaskStatus status) {
         this.status = status;
     }
 
@@ -82,8 +79,8 @@ public class CreateTaskRequest {
         CreateTaskRequest that = (CreateTaskRequest) o;
         return Objects.equals(title, that.title) &&
                 Objects.equals(description, that.description) &&
-                Objects.equals(priority, that.priority) &&
-                Objects.equals(status, that.status) &&
+                priority == that.priority &&
+                status == that.status &&
                 Objects.equals(userId, that.userId);
     }
 

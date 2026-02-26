@@ -1,22 +1,30 @@
 package org.task.taskmaganer.controller;
 
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.task.taskmaganer.dto.request.CreateTaskRequest;
 import org.task.taskmaganer.dto.request.UpdateTaskRequest;
+import org.task.taskmaganer.dto.response.PageResponse;
 import org.task.taskmaganer.dto.response.TaskResponse;
+import org.task.taskmaganer.entity.TaskPriority;
+import org.task.taskmaganer.entity.TaskStatus;
 import org.task.taskmaganer.service.TaskService;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping(value = "/tasks", name = "TaskController")
 public class TaskController {
 
+    private static final Logger log = LoggerFactory.getLogger(TaskController.class);
     private final TaskService taskService;
 
     @Autowired
@@ -37,63 +45,115 @@ public class TaskController {
     }
 
     @GetMapping("/")
-    public ResponseEntity<List<TaskResponse>> getAllTasks() {
-        List<TaskResponse> responses = taskService.getAllTasks();
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<PageResponse<TaskResponse>> getAllTasks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+        Pageable pageable = createPageable(page, size, sort);
+        PageResponse<TaskResponse> response = taskService.getAllTasks(pageable);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/active")
-    public ResponseEntity<List<TaskResponse>> getAllActiveTasks() {
-        List<TaskResponse> responses = taskService.getAllActiveTasks();
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<PageResponse<TaskResponse>> getAllActiveTasks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+        Pageable pageable = createPageable(page, size, sort);
+
+        PageResponse<TaskResponse> response = taskService.getAllActiveTasks(pageable);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<TaskResponse>> getTasksByStatus(@PathVariable String status) {
-        List<TaskResponse> responses = taskService.getTasksByStatus(status);
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<PageResponse<TaskResponse>> getTasksByStatus(
+            @PathVariable TaskStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+        Pageable pageable = createPageable(page, size, sort);
+        PageResponse<TaskResponse> response = taskService.getTasksByStatus(status, pageable);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/priority/{priority}")
-    public ResponseEntity<List<TaskResponse>> getTasksByPriority(@PathVariable String priority) {
-        List<TaskResponse> responses = taskService.getTasksByPriority(priority);
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<PageResponse<TaskResponse>> getTasksByPriority(
+            @PathVariable TaskPriority priority,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+        Pageable pageable = createPageable(page, size, sort);
+        PageResponse<TaskResponse> response = taskService.getTasksByPriority(priority, pageable);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/active/status/{status}")
-    public ResponseEntity<List<TaskResponse>> getActiveTasksByStatus(@PathVariable String status) {
-        List<TaskResponse> responses = taskService.getActiveTasksByStatus(status);
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<PageResponse<TaskResponse>> getActiveTasksByStatus(
+            @PathVariable TaskStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+        Pageable pageable = createPageable(page, size, sort);
+        PageResponse<TaskResponse> response = taskService.getActiveTasksByStatus(status, pageable);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/active/priority/{priority}")
-    public ResponseEntity<List<TaskResponse>> getActiveTasksByPriority(@PathVariable String priority) {
-        List<TaskResponse> responses = taskService.getActiveTasksByPriority(priority);
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<PageResponse<TaskResponse>> getActiveTasksByPriority(
+            @PathVariable TaskPriority priority,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+        Pageable pageable = createPageable(page, size, sort);
+        PageResponse<TaskResponse> response = taskService.getActiveTasksByPriority(priority, pageable);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<TaskResponse>> getTasksByUserId(@PathVariable UUID userId) {
-        List<TaskResponse> responses = taskService.getTasksByUserId(userId);
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<PageResponse<TaskResponse>> getTasksByUserId(
+            @PathVariable UUID userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+        Pageable pageable = createPageable(page, size, sort);
+
+        PageResponse<TaskResponse> response = taskService.getTasksByUserId(userId, pageable);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/user/{userId}/active")
-    public ResponseEntity<List<TaskResponse>> getActiveTasksByUserId(@PathVariable UUID userId) {
-        List<TaskResponse> responses = taskService.getActiveTasksByUserId(userId);
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<PageResponse<TaskResponse>> getActiveTasksByUserId(
+            @PathVariable UUID userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+        Pageable pageable = createPageable(page, size, sort);
+        PageResponse<TaskResponse> response = taskService.getActiveTasksByUserId(userId, pageable);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/user/{userId}/status/{status}")
-    public ResponseEntity<List<TaskResponse>> getTasksByUserIdAndStatus(@PathVariable UUID userId, @PathVariable String status) {
-        List<TaskResponse> responses = taskService.getTasksByUserIdAndStatus(userId, status);
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<PageResponse<TaskResponse>> getTasksByUserIdAndStatus(
+            @PathVariable UUID userId,
+            @PathVariable TaskStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+        Pageable pageable = createPageable(page, size, sort);
+        PageResponse<TaskResponse> response = taskService.getTasksByUserIdAndStatus(userId, status, pageable);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/user/{userId}/priority/{priority}")
-    public ResponseEntity<List<TaskResponse>> getTasksByUserIdAndPriority(@PathVariable UUID userId, @PathVariable String priority) {
-        List<TaskResponse> responses = taskService.getTasksByUserIdAndPriority(userId, priority);
-        return ResponseEntity.ok(responses);
+    public ResponseEntity<PageResponse<TaskResponse>> getTasksByUserIdAndPriority(
+            @PathVariable UUID userId,
+            @PathVariable TaskPriority priority,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt,desc") String sort) {
+        Pageable pageable = createPageable(page, size, sort);
+        PageResponse<TaskResponse> response = taskService.getTasksByUserIdAndPriority(userId, priority, pageable);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
@@ -118,5 +178,14 @@ public class TaskController {
     public ResponseEntity<Boolean> existsByTitle(@PathVariable String title) {
         boolean exists = taskService.existsByTitle(title);
         return ResponseEntity.ok(exists);
+    }
+
+    private Pageable createPageable(int page, int size, String sort) {
+        String[] sortParams = sort.split(",");
+        String sortField = sortParams[0];
+        Sort.Direction direction = sortParams.length > 1 && sortParams[1].equalsIgnoreCase("asc")
+                ? Sort.Direction.ASC
+                : Sort.Direction.DESC;
+        return PageRequest.of(page, size, Sort.by(direction, sortField));
     }
 }

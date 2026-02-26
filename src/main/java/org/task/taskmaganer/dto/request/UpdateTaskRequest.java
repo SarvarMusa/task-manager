@@ -1,28 +1,25 @@
 package org.task.taskmaganer.dto.request;
 
-import jakarta.validation.constraints.Size;
+import org.task.taskmaganer.entity.TaskPriority;
+import org.task.taskmaganer.entity.TaskStatus;
 
 import java.util.Objects;
 
 public class UpdateTaskRequest {
 
-    @Size(min = 1, max = 100, message = "Title must be between 1 and 100 characters")
     private String title;
 
-    @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
 
-    @Size(max = 20, message = "Priority must not exceed 20 characters")
-    private String priority;
+    private TaskPriority priority;
 
-    @Size(max = 20, message = "Status must not exceed 20 characters")
-    private String status;
+    private TaskStatus status;
 
     private Boolean isActive;
 
     public UpdateTaskRequest() {}
 
-    public UpdateTaskRequest(String title, String description, String priority, String status, Boolean isActive) {
+    public UpdateTaskRequest(String title, String description, TaskPriority priority, TaskStatus status, Boolean isActive) {
         this.title = title;
         this.description = description;
         this.priority = priority;
@@ -46,19 +43,19 @@ public class UpdateTaskRequest {
         this.description = description;
     }
 
-    public String getPriority() {
+    public TaskPriority getPriority() {
         return priority;
     }
 
-    public void setPriority(String priority) {
+    public void setPriority(TaskPriority priority) {
         this.priority = priority;
     }
 
-    public String getStatus() {
+    public TaskStatus getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(TaskStatus status) {
         this.status = status;
     }
 
@@ -76,8 +73,8 @@ public class UpdateTaskRequest {
         UpdateTaskRequest that = (UpdateTaskRequest) o;
         return Objects.equals(title, that.title) &&
                Objects.equals(description, that.description) &&
-               Objects.equals(priority, that.priority) &&
-               Objects.equals(status, that.status) &&
+               priority == that.priority &&
+               status == that.status &&
                Objects.equals(isActive, that.isActive);
     }
 
