@@ -1,39 +1,33 @@
 package org.task.taskmaganer.dto.request;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 import java.util.Objects;
 
-public class CreateTaskRequest {
+public class UpdateTaskRequest {
 
-    @NotBlank(message = "Title is required")
     @Size(min = 1, max = 100, message = "Title must be between 1 and 100 characters")
     private String title;
 
     @Size(max = 500, message = "Description must not exceed 500 characters")
     private String description;
 
-    @NotBlank(message = "Priority is required")
     @Size(max = 20, message = "Priority must not exceed 20 characters")
     private String priority;
 
-    @NotBlank(message = "Status is required")
     @Size(max = 20, message = "Status must not exceed 20 characters")
     private String status;
 
-    @NotBlank(message = "User ID is required")
-    private String userId;
+    private Boolean isActive;
 
-    public CreateTaskRequest() {
-    }
+    public UpdateTaskRequest() {}
 
-    public CreateTaskRequest(String title, String description, String priority, String status, String userId) {
+    public UpdateTaskRequest(String title, String description, String priority, String status, Boolean isActive) {
         this.title = title;
         this.description = description;
         this.priority = priority;
         this.status = status;
-        this.userId = userId;
+        this.isActive = isActive;
     }
 
     public String getTitle() {
@@ -68,27 +62,27 @@ public class CreateTaskRequest {
         this.status = status;
     }
 
-    public String getUserId() {
-        return userId;
+    public Boolean getIsActive() {
+        return isActive;
     }
 
-    public void setUserId(String userId) {
-        this.userId = userId;
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        CreateTaskRequest that = (CreateTaskRequest) o;
+        UpdateTaskRequest that = (UpdateTaskRequest) o;
         return Objects.equals(title, that.title) &&
-                Objects.equals(description, that.description) &&
-                Objects.equals(priority, that.priority) &&
-                Objects.equals(status, that.status) &&
-                Objects.equals(userId, that.userId);
+               Objects.equals(description, that.description) &&
+               Objects.equals(priority, that.priority) &&
+               Objects.equals(status, that.status) &&
+               Objects.equals(isActive, that.isActive);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(title, description, priority, status, userId);
+        return Objects.hash(title, description, priority, status, isActive);
     }
 }

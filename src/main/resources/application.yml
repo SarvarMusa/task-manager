@@ -1,0 +1,9 @@
+spring:
+  profiles:
+    active: prod
+  application:
+    name: task-manager
+logging:
+  level:
+    web: debug
+    org.hibernate.sql: debug

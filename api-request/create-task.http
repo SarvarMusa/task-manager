@@ -1,8 +1,0 @@
-### Create task
-POST http://localhost:8080/tasks/
-Content-Type: application/json
-Accept: application/json
-
-{
-  "title": "Read linux book in the morning"
-}

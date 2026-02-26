@@ -1,0 +1,104 @@
+### =============================================
+### TASK API REQUESTS with Auto-Capture
+### =============================================
+
+### 1. Create Task (auto-captures taskId)
+POST http://localhost:8080/tasks/
+Content-Type: application/json
+
+{
+  "title": "Read Linux book in the morning",
+  "description": "Read chapters 5-8 of the Linux command line book",
+  "priority": "HIGH",
+  "status": "TODO",
+  "userId": "{{userId}}"
+}
+
+> {%
+    client.global.set("taskId", response.body.id);
+%}
+
+### 2. Create Second Task
+POST http://localhost:8080/tasks/
+Content-Type: application/json
+
+{
+  "title": "Complete Spring Boot project",
+  "description": "Finish implementing the task manager REST API",
+  "priority": "MEDIUM",
+  "status": "IN_PROGRESS",
+  "userId": "{{userId}}"
+}
+
+### 3. Create Third Task
+POST http://localhost:8080/tasks/
+Content-Type: application/json
+
+{
+  "title": "Write unit tests",
+  "description": "Add tests for service and controller layers",
+  "priority": "LOW",
+  "status": "TODO",
+  "userId": "{{userId}}"
+}
+
+### 4. Get Task By ID (uses captured taskId from request #1)
+GET http://localhost:8080/tasks/{{taskId}}
+
+### 5. Get All Tasks
+GET http://localhost:8080/tasks/
+
+### 6. Get All Active Tasks
+GET http://localhost:8080/tasks/active
+
+### 7. Get Tasks By Status
+GET http://localhost:8080/tasks/status/TODO
+
+### 8. Get Tasks By Priority
+GET http://localhost:8080/tasks/priority/HIGH
+
+### 9. Get Active Tasks By Status
+GET http://localhost:8080/tasks/active/status/TODO
+
+### 10. Get Active Tasks By Priority
+GET http://localhost:8080/tasks/active/priority/HIGH
+
+### 11. Get All Tasks By User ID
+GET http://localhost:8080/tasks/user/{{userId}}
+
+### 12. Get Active Tasks By User ID
+GET http://localhost:8080/tasks/user/{{userId}}/active
+
+### 13. Get Tasks By User ID and Status
+GET http://localhost:8080/tasks/user/{{userId}}/status/TODO
+
+### 14. Get Tasks By User ID and Priority
+GET http://localhost:8080/tasks/user/{{userId}}/priority/HIGH
+
+### 15. Check If Task Title Exists
+GET http://localhost:8080/tasks/exists/title/Read Linux book in the morning
+
+### 16. Update Task
+PUT http://localhost:8080/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "title": "Read Linux book in the evening",
+  "description": "Read chapters 9-12 instead",
+  "priority": "MEDIUM",
+  "status": "IN_PROGRESS"
+}
+
+### 17. Update Task Status Only
+PUT http://localhost:8080/tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "status": "DONE"
+}
+
+### 18. Soft Delete Task (sets isActive = false)
+DELETE http://localhost:8080/tasks/{{taskId}}
+
+### 19. Hard Delete Task (removes from database)
+DELETE http://localhost:8080/tasks/{{taskId}}/hard

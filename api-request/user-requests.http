@@ -1,0 +1,71 @@
+### =============================================
+### USER API REQUESTS with Auto-Capture
+### =============================================
+
+### 1. Create User (auto-captures userId for subsequent requests)
+POST http://localhost:8080/users/
+Content-Type: application/json
+
+{
+  "username": "gvgvgvkjsjndfn",
+  "email": "john@exampjsfd5le.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "password": "password123"
+}
+
+> {%
+    client.global.set("userId", response.body.id);
+    client.global.set("username", response.body.username);
+%}
+
+### 2. Create Second User
+POST http://localhost:8080/users/
+Content-Type: application/json
+
+{
+  "username": "janesmith",
+  "email": "jane@example.com",
+  "firstName": "Jane",
+  "lastName": "Smith",
+  "password": "password456"
+}
+
+### 3. Get User By ID (uses captured userId from request #1)
+GET http://localhost:8080/users/{{userId}}
+
+### 4. Get User By Username
+GET http://localhost:8080/users/username/{{username}}
+
+### 5. Get User By Email
+GET http://localhost:8080/users/email/john@example.com
+
+### 6. Get All Users
+GET http://localhost:8080/users/
+
+### 7. Get All Active Users
+GET http://localhost:8080/users/active
+
+### 8. Check If Username Exists
+GET http://localhost:8080/users/exists/username/johndoe
+
+### 9. Check If Email Exists
+GET http://localhost:8080/users/exists/email/john@example.com
+
+### 10. Update User
+PUT http://localhost:8080/users/{{userId}}
+Content-Type: application/json
+
+{
+  "firstName": "Jonathan",
+  "lastName": "Doe",
+  "email": "jonathan@example.com",
+  "password": "newpassword123",
+  "isActive": true
+}
+
+### 11. Soft Delete User (sets isActive = false)
+DELETE http://localhost:8080/users/{{userId}}
+
+### 12. Hard Delete User (removes from database)
+DELETE http://localhost:8080/users/{{userId}}/hard
