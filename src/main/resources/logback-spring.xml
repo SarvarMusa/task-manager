@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Logback konfigürasyonu - Farklı ortamlar için farklı loglama stratejileri
+    
+    Ortam bazlı profiller:
+    - dev: Konsola renkli loglar, DEBUG seviyesi, dosyaya yazmaz
+    - test: Konsol + dosya, INFO seviyesi
+    - prod: Sadece dosya, INFO seviyesi, JSON format, rotation
+-->
+<configuration>
+    
+    <!-- Property'ler -->
+    <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{correlationId}] %logger{36} - %msg%n"/>
+    <property name="LOG_PATTERN_COLOR" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %highlight(%-5level) [%thread] %cyan(%logger{36}) - %msg%n"/>
+    <property name="JSON_LOG_PATTERN" value="{&quot;timestamp&quot;:&quot;%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ}&quot;,&quot;level&quot;:&quot;%-5level&quot;,&quot;thread&quot;:&quot;%thread&quot;,&quot;correlationId&quot;:&quot;%X{correlationId}&quot;,&quot;logger&quot;:&quot;%logger{36}&quot;,&quot;message&quot;:&quot;%msg&quot;,&quot;exception&quot;:&quot;%ex&quot;}%n"/>
+    <property name="LOG_FILE" value="logs/task-manager"/>
+    
+    <!-- DEV Profili: Konsola renkli loglar -->
+    <springProfile name="dev">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>${LOG_PATTERN_COLOR}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+        
+        <root level="DEBUG">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+        
+        <!-- Hibernate SQL logları - DEV'te görünür -->
+        <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+        
+        <logger name="org.hibernate.type.descriptor.sql.BasicBinder" level="TRACE" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+        </logger>
+    </springProfile>
+    
+    <!-- TEST Profili: Konsol + dosya, INFO seviyesi -->
+    <springProfile name="test">
+        <!-- Konsol appender -->
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>${LOG_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+        
+        <!-- Dosya appender - günlük rotation -->
+        <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_FILE}.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <!-- Günlük rotation -->
+                <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <!-- 30 gün sakla -->
+                <maxHistory>30</maxHistory>
+                <!-- Toplam 10GB limit -->
+                <totalSizeCap>10GB</totalSizeCap>
+            </rollingPolicy>
+            <encoder>
+                <pattern>${LOG_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+        
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+        </root>
+        
+        <!-- Application logları - DEBUG seviyesinde -->
+        <logger name="org.task.taskmaganer" level="DEBUG" additivity="false">
+            <appender-ref ref="CONSOLE"/>
+            <appender-ref ref="FILE"/>
+        </logger>
+    </springProfile>
+    
+    <!-- PROD Profili: Sadece dosya, JSON format, rotation -->
+    <springProfile name="prod">
+        <!-- Ana log dosyası - INFO ve üstü -->
+        <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_FILE}.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>90</maxHistory>
+                <totalSizeCap>50GB</totalSizeCap>
+            </rollingPolicy>
+            <encoder>
+                <pattern>${LOG_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+        
+        <!-- Hata log dosyası - sadece ERROR -->
+        <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_FILE}-error.log</file>
+            <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                <level>ERROR</level>
+            </filter>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_FILE}-error.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>180</maxHistory>
+                <totalSizeCap>20GB</totalSizeCap>
+            </rollingPolicy>
+            <encoder>
+                <pattern>${LOG_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+        
+        <!-- Audit log dosyası - business event'ler -->
+        <appender name="AUDIT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${LOG_FILE}-audit.log</file>
+            <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                <fileNamePattern>${LOG_FILE}-audit.%d{yyyy-MM-dd}.log</fileNamePattern>
+                <maxHistory>365</maxHistory>
+                <totalSizeCap>100GB</totalSizeCap>
+            </rollingPolicy>
+            <encoder>
+                <pattern>${LOG_PATTERN}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+        
+        <root level="WARN">
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
+        </root>
+        
+        <!-- Application logları - INFO seviyesinde -->
+        <logger name="org.task.taskmaganer" level="INFO" additivity="false">
+            <appender-ref ref="FILE"/>
+            <appender-ref ref="ERROR_FILE"/>
+        </logger>
+        
+        <!-- Audit logger - business event'ler için ayrı dosya -->
+        <logger name="AUDIT" level="INFO" additivity="false">
+            <appender-ref ref="AUDIT_FILE"/>
+        </logger>
+        
+        <!-- Spring Security logları - WARN seviyesinde -->
+        <logger name="org.springframework.security" level="WARN"/>
+        
+        <!-- Hibernate logları - sadece ERROR -->
+        <logger name="org.hibernate" level="ERROR"/>
+    </springProfile>
+    
+    <!-- Varsayılan (profil yoksa) - DEV gibi davran -->
+    <springProfile name="!dev,!test,!prod">
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder>
+                <pattern>${LOG_PATTERN_COLOR}</pattern>
+                <charset>UTF-8</charset>
+            </encoder>
+        </appender>
+        
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+    
+</configuration>

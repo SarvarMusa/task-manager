@@ -20,3 +20,17 @@ spring:
     baseline-version: 0
     locations: classpath:db/migration
     validate-on-migrate: true
+  aop:
+    auto: true
+    proxy-target-class: true
+
+# Logging configuration for DEV profile
+logging:
+  level:
+    root: INFO
+    org.task.taskmaganer: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} %highlight(%-5level) [%thread] %cyan(%logger{36}) - %msg%n"
