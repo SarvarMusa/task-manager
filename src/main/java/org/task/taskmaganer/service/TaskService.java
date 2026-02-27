@@ -131,17 +131,8 @@ public class TaskService {
     }
 
     public PageResponse<TaskResponse> searchTasks(SearchTaskRequest request, Pageable pageable) {
-        Specification<Task> spec = TaskSpecification.withFilters(
-                request.getSearchQuery(),
-                request.getStatus(),
-                request.getPriority(),
-                request.getUserId(),
-                request.getIsActive(),
-                request.getDueDateFrom(),
-                request.getDueDateTo(),
-                request.getCreatedAtFrom(),
-                request.getCreatedAtTo()
-        );
+        var criteria = request.toFilterCriteria();
+        Specification<Task> spec = TaskSpecification.withFilters(criteria);
 
         Page<Task> taskPage = taskRepository.findAll(spec, pageable);
         Page<TaskResponse> responsePage = taskPage.map(TaskResponse::new);

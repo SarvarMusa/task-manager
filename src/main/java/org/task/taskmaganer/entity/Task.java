@@ -48,6 +48,23 @@ public class Task {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    public static final class Fields {
+        public static final String id = "id";
+        public static final String title = "title";
+        public static final String description = "description";
+        public static final String priority = "priority";
+        public static final String status = "status";
+        public static final String user = "user";
+        public static final String dueDate = "dueDate";
+        public static final String isActive = "isActive";
+        public static final String createdAt = "createdAt";
+        public static final String updatedAt = "updatedAt";
+
+        private Fields() {
+            // Utility class
+        }
+    }
+
     public Task() {
     }
 

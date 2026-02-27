@@ -3,6 +3,7 @@ package org.task.taskmaganer.dto.request;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.task.taskmaganer.entity.TaskPriority;
 import org.task.taskmaganer.entity.TaskStatus;
+import org.task.taskmaganer.specification.TaskSpecification;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -109,5 +110,23 @@ public class SearchTaskRequest {
 
     public void setCreatedAtTo(LocalDateTime createdAtTo) {
         this.createdAtTo = createdAtTo;
+    }
+
+    /**
+     * Bu request'i TaskFilterCriteria'ya dönüştürür.
+     * Clean Code: Conversion logic tek yerde toplanmış.
+     */
+    public TaskSpecification.TaskFilterCriteria toFilterCriteria() {
+        return new TaskSpecification.TaskFilterCriteria(
+                searchQuery,
+                status,
+                priority,
+                userId,
+                isActive,
+                dueDateFrom,
+                dueDateTo,
+                createdAtFrom,
+                createdAtTo
+        );
     }
 }

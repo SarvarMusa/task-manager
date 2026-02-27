@@ -9,11 +9,142 @@ import org.task.taskmaganer.entity.TaskStatus;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Task sorguları için JPA Specification builder.
+ * <p>
+ * Clean Code prensipleri:
+ * - SRP: Her metod tek bir sorumluluk (tek bir filtre kriteri)
+ * - Open/Closed: Yeni filtre eklemek için mevcut kodu değiştirmeye gerek yok
+ * - DRY: Tekrar eden logic'ler ortak metodlara çıkarıldı
+ * - Builder Pattern: Specification'ları birleştirme esnekliği
+ */
 public class TaskSpecification {
 
-    public static Specification<Task> withFilters(
+    private TaskSpecification() {
+        // Utility class - instantiation engelleme
+        throw new AssertionError("Utility class - do not instantiate");
+    }
+
+    // ==================== COMPOSITE SPECIFICATIONS ====================
+
+    /**
+     * Tüm filtre kriterlerini birleştiren composite specification.
+     * Null olan kriterler ignore edilir.
+     */
+    public static Specification<Task> withFilters(TaskFilterCriteria criteria) {
+        return Specification.where(
+                withSearchQuery(criteria.searchQuery())
+                        .and(withStatus(criteria.status()))
+                        .and(withPriority(criteria.priority()))
+                        .and(withUserId(criteria.userId()))
+                        .and(withIsActive(criteria.isActive()))
+                        .and(withDueDateBetween(criteria.dueDateFrom(), criteria.dueDateTo()))
+                        .and(withCreatedAtBetween(criteria.createdAtFrom(), criteria.createdAtTo()))
+        );
+    }
+
+    // ==================== BASIC SPECIFICATIONS ====================
+
+    public static Specification<Task> withSearchQuery(String searchQuery) {
+        return (root, query, cb) -> {
+            if (isEmpty(searchQuery)) {
+                return cb.conjunction();
+            }
+
+            String pattern = createLikePattern(searchQuery);
+            Predicate titleMatch = cb.like(cb.lower(root.get(Task.Fields.title)), pattern);
+            Predicate descMatch = cb.like(cb.lower(root.get(Task.Fields.description)), pattern);
+
+            return cb.or(titleMatch, descMatch);
+        };
+    }
+
+    public static Specification<Task> withStatus(TaskStatus status) {
+        return (root, query, cb) ->
+                equalsPredicate(cb, root.get(Task.Fields.status), status);
+    }
+
+    public static Specification<Task> withPriority(TaskPriority priority) {
+        return (root, query, cb) ->
+                equalsPredicate(cb, root.get(Task.Fields.priority), priority);
+    }
+
+    public static Specification<Task> withUserId(UUID userId) {
+        return (root, query, cb) ->
+                equalsPredicate(cb, root.get(Task.Fields.user).get("id"), userId);
+    }
+
+    public static Specification<Task> withIsActive(Boolean isActive) {
+        return (root, query, cb) ->
+                equalsPredicate(cb, root.get(Task.Fields.isActive), isActive);
+    }
+
+    public static Specification<Task> withActiveStatus() {
+        return withIsActive(true);
+    }
+
+    // ==================== DATE RANGE SPECIFICATIONS ====================
+
+    public static Specification<Task> withDueDateBetween(LocalDateTime from, LocalDateTime to) {
+        return (root, query, cb) ->
+                dateRangePredicate(cb, root.get(Task.Fields.dueDate), from, to);
+    }
+
+    public static Specification<Task> withCreatedAtBetween(LocalDateTime from, LocalDateTime to) {
+        return (root, query, cb) ->
+                dateRangePredicate(cb, root.get(Task.Fields.createdAt), from, to);
+    }
+
+    // ==================== HELPER METHODS ====================
+
+    private static boolean isEmpty(String str) {
+        return str == null || str.trim().isEmpty();
+    }
+
+    private static String createLikePattern(String searchQuery) {
+        return "%" + searchQuery.toLowerCase().trim() + "%";
+    }
+
+    private static <T> Predicate equalsPredicate(
+            jakarta.persistence.criteria.CriteriaBuilder cb,
+            jakarta.persistence.criteria.Path<T> path,
+            T value) {
+        return Optional.ofNullable(value)
+                .map(v -> cb.equal(path, v))
+                .orElse(cb.conjunction());
+    }
+
+    private static <T extends Comparable<? super T>> Predicate dateRangePredicate(
+            jakarta.persistence.criteria.CriteriaBuilder cb,
+            jakarta.persistence.criteria.Path<T> path,
+            T from,
+            T to) {
+
+        List<Predicate> predicates = new ArrayList<>();
+
+        Optional.ofNullable(from)
+                .ifPresent(f -> predicates.add(cb.greaterThanOrEqualTo(path, f)));
+
+        Optional.ofNullable(to)
+                .ifPresent(t -> predicates.add(cb.lessThanOrEqualTo(path, t)));
+
+        if (predicates.isEmpty()) {
+            return cb.conjunction();
+        }
+
+        return cb.and(predicates.toArray(new Predicate[0]));
+    }
+
+    // ==================== RECORD FOR FILTER CRITERIA ====================
+
+    /**
+     * Tüm filtre kriterlerini bir arada tutan record.
+     * Null safety ve immutability sağlar.
+     */
+    public record TaskFilterCriteria(
             String searchQuery,
             TaskStatus status,
             TaskPriority priority,
@@ -22,151 +153,83 @@ public class TaskSpecification {
             LocalDateTime dueDateFrom,
             LocalDateTime dueDateTo,
             LocalDateTime createdAtFrom,
-            LocalDateTime createdAtTo) {
+            LocalDateTime createdAtTo
+    ) {
+        // Compact constructor - validation
+        public TaskFilterCriteria {
+            // searchQuery null ise boş string yap
+            if (searchQuery != null) {
+                searchQuery = searchQuery.trim();
+            }
+        }
 
-        return (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
+        // Builder pattern alternative
+        public static Builder builder() {
+            return new Builder();
+        }
 
-            if (searchQuery != null && !searchQuery.isEmpty()) {
-                String searchPattern = "%" + searchQuery.toLowerCase() + "%";
-                Predicate titlePredicate = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("title")), searchPattern);
-                Predicate descriptionPredicate = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("description")), searchPattern);
-                predicates.add(criteriaBuilder.or(titlePredicate, descriptionPredicate));
+        public static class Builder {
+            private String searchQuery;
+            private TaskStatus status;
+            private TaskPriority priority;
+            private UUID userId;
+            private Boolean isActive;
+            private LocalDateTime dueDateFrom;
+            private LocalDateTime dueDateTo;
+            private LocalDateTime createdAtFrom;
+            private LocalDateTime createdAtTo;
+
+            public Builder searchQuery(String searchQuery) {
+                this.searchQuery = searchQuery;
+                return this;
             }
 
-            if (status != null) {
-                predicates.add(criteriaBuilder.equal(root.get("status"), status));
+            public Builder status(TaskStatus status) {
+                this.status = status;
+                return this;
             }
 
-            if (priority != null) {
-                predicates.add(criteriaBuilder.equal(root.get("priority"), priority));
+            public Builder priority(TaskPriority priority) {
+                this.priority = priority;
+                return this;
             }
 
-            if (userId != null) {
-                predicates.add(criteriaBuilder.equal(root.get("user").get("id"), userId));
+            public Builder userId(UUID userId) {
+                this.userId = userId;
+                return this;
             }
 
-            if (isActive != null) {
-                predicates.add(criteriaBuilder.equal(root.get("isActive"), isActive));
+            public Builder isActive(Boolean isActive) {
+                this.isActive = isActive;
+                return this;
             }
 
-            if (dueDateFrom != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
-                        root.get("dueDate"), dueDateFrom));
+            public Builder dueDateFrom(LocalDateTime dueDateFrom) {
+                this.dueDateFrom = dueDateFrom;
+                return this;
             }
 
-            if (dueDateTo != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(
-                        root.get("dueDate"), dueDateTo));
+            public Builder dueDateTo(LocalDateTime dueDateTo) {
+                this.dueDateTo = dueDateTo;
+                return this;
             }
 
-            if (createdAtFrom != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
-                        root.get("createdAt"), createdAtFrom));
+            public Builder createdAtFrom(LocalDateTime createdAtFrom) {
+                this.createdAtFrom = createdAtFrom;
+                return this;
             }
 
-            if (createdAtTo != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(
-                        root.get("createdAt"), createdAtTo));
+            public Builder createdAtTo(LocalDateTime createdAtTo) {
+                this.createdAtTo = createdAtTo;
+                return this;
             }
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        };
-    }
-
-    public static Specification<Task> withSearchQuery(String searchQuery) {
-        return (root, query, criteriaBuilder) -> {
-            if (searchQuery == null || searchQuery.isEmpty()) {
-                return criteriaBuilder.conjunction();
+            public TaskFilterCriteria build() {
+                return new TaskFilterCriteria(
+                        searchQuery, status, priority, userId, isActive,
+                        dueDateFrom, dueDateTo, createdAtFrom, createdAtTo
+                );
             }
-
-            String searchPattern = "%" + searchQuery.toLowerCase() + "%";
-            Predicate titlePredicate = criteriaBuilder.like(
-                    criteriaBuilder.lower(root.get("title")), searchPattern);
-            Predicate descriptionPredicate = criteriaBuilder.like(
-                    criteriaBuilder.lower(root.get("description")), searchPattern);
-
-            return criteriaBuilder.or(titlePredicate, descriptionPredicate);
-        };
-    }
-
-    public static Specification<Task> withActiveStatus() {
-        return (root, query, criteriaBuilder) ->
-                criteriaBuilder.equal(root.get("isActive"), true);
-    }
-
-    public static Specification<Task> withStatus(TaskStatus status) {
-        return (root, query, criteriaBuilder) -> {
-            if (status == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("status"), status);
-        };
-    }
-
-    public static Specification<Task> withPriority(TaskPriority priority) {
-        return (root, query, criteriaBuilder) -> {
-            if (priority == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("priority"), priority);
-        };
-    }
-
-    public static Specification<Task> withUserId(UUID userId) {
-        return (root, query, criteriaBuilder) -> {
-            if (userId == null) {
-                return criteriaBuilder.conjunction();
-            }
-            return criteriaBuilder.equal(root.get("user").get("id"), userId);
-        };
-    }
-
-    public static Specification<Task> withDueDateBetween(
-            LocalDateTime from, LocalDateTime to) {
-        return (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            if (from != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
-                        root.get("dueDate"), from));
-            }
-
-            if (to != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(
-                        root.get("dueDate"), to));
-            }
-
-            if (predicates.isEmpty()) {
-                return criteriaBuilder.conjunction();
-            }
-
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        };
-    }
-
-    public static Specification<Task> withCreatedAtBetween(
-            LocalDateTime from, LocalDateTime to) {
-        return (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            if (from != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(
-                        root.get("createdAt"), from));
-            }
-
-            if (to != null) {
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(
-                        root.get("createdAt"), to));
-            }
-
-            if (predicates.isEmpty()) {
-                return criteriaBuilder.conjunction();
-            }
-
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        };
+        }
     }
 }
