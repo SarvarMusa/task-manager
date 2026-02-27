@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Documentation ###
+docs/
+task-manager-docs/
+task-manager-documents/
+
+### Logs ###
+logs/
+*.log
