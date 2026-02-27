@@ -1,21 +1,42 @@
 package org.task.taskmaganer.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.task.taskmaganer.entity.Task;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@Schema(description = "Görev yanıt modeli")
 public class TaskResponse {
 
+    @Schema(description = "Görev ID'si", example = "550e8400-e29b-41d4-a716-446655440000")
     private String id;
+
+    @Schema(description = "Görev başlığı", example = "Yeni proje planı")
     private String title;
+
+    @Schema(description = "Görev açıklaması", example = "Proje için detaylı plan hazırlanacak")
     private String description;
+
+    @Schema(description = "Görev önceliği", example = "HIGH")
     private String priority;
+
+    @Schema(description = "Görev durumu", example = "TODO")
     private String status;
+
+    @Schema(description = "Atanan kullanıcı ID'si", example = "550e8400-e29b-41d4-a716-446655440001")
     private String userId;
+
+    @Schema(description = "Atanan kullanıcı adı", example = "johndoe")
     private String username;
+
+    @Schema(description = "Görev aktiflik durumu", example = "true")
     private Boolean isActive;
+
+    @Schema(description = "Oluşturulma tarihi", example = "2024-01-15T10:30:00")
     private LocalDateTime createdAt;
+
+    @Schema(description = "Güncellenme tarihi", example = "2024-01-15T14:45:00")
     private LocalDateTime updatedAt;
 
     public TaskResponse() {}

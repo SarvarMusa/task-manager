@@ -1,20 +1,27 @@
 package org.task.taskmaganer.dto.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.task.taskmaganer.entity.TaskPriority;
 import org.task.taskmaganer.entity.TaskStatus;
 
 import java.util.Objects;
 
+@Schema(description = "Görev güncelleme isteği")
 public class UpdateTaskRequest {
 
+    @Schema(description = "Görev başlığı", example = "Güncellenmiş proje planı")
     private String title;
 
+    @Schema(description = "Görev açıklaması", example = "Güncellenmiş açıklama")
     private String description;
 
+    @Schema(description = "Görev önceliği", example = "MEDIUM")
     private TaskPriority priority;
 
+    @Schema(description = "Görev durumu", example = "IN_PROGRESS")
     private TaskStatus status;
 
+    @Schema(description = "Görev aktiflik durumu", example = "true")
     private Boolean isActive;
 
     public UpdateTaskRequest() {}

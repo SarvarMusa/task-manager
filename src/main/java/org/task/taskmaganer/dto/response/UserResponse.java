@@ -1,19 +1,36 @@
 package org.task.taskmaganer.dto.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.task.taskmaganer.entity.User;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+@Schema(description = "Kullanıcı yanıt modeli")
 public class UserResponse {
     
+    @Schema(description = "Kullanıcı ID'si", example = "550e8400-e29b-41d4-a716-446655440000")
     private String id;
+
+    @Schema(description = "Kullanıcı adı", example = "johndoe")
     private String username;
+
+    @Schema(description = "E-posta adresi", example = "john.doe@example.com")
     private String email;
+
+    @Schema(description = "Ad", example = "John")
     private String firstName;
+
+    @Schema(description = "Soyad", example = "Doe")
     private String lastName;
+
+    @Schema(description = "Kullanıcı aktiflik durumu", example = "true")
     private Boolean isActive;
+
+    @Schema(description = "Oluşturulma tarihi", example = "2024-01-15T10:30:00")
     private LocalDateTime createdAt;
+
+    @Schema(description = "Güncellenme tarihi", example = "2024-01-15T14:45:00")
     private LocalDateTime updatedAt;
     
     public UserResponse() {}
