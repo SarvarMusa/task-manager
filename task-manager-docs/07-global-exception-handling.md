@@ -1,6 +1,7 @@
 # Global Exception Handling - Complete Guide
 
 ## Tarih
+
 2026-02-27
 
 ## Sorun (Problem)
@@ -8,18 +9,30 @@
 Önceki exception handling yapısı şu sorunlara sahipti:
 
 ### 1. DRY Prensibi Bozulması
+
 Her exception handler'da aynı response oluşturma kodu tekrarlanıyordu:
+
 ```java
 // Her handler'da aynı pattern
 Map<String, Object> response = new HashMap<>();
-response.put("timestamp", LocalDateTime.now());
-response.put("status", HttpStatus.NOT_FOUND.value());
-response.put("error", "Not Found");
-response.put("message", ex.getMessage());
+response.
+
+put("timestamp",LocalDateTime.now());
+        response.
+
+put("status",HttpStatus.NOT_FOUND.value());
+        response.
+
+put("error","Not Found");
+response.
+
+put("message",ex.getMessage());
 ```
 
 ### 2. Programatik Hata Ayırt Edilemiyordu
+
 Client'lar sadece status code ve message görebiliyordu. Hata kodları yoktu:
+
 ```json
 {
   "status": 404,
@@ -29,7 +42,9 @@ Client'lar sadece status code ve message görebiliyordu. Hata kodları yoktu:
 ```
 
 ### 3. Validasyon Hataları Detaylı Değildi
+
 Hangi alan hangi hatayı verdiği net değildi:
+
 ```json
 {
   "message": "Validation failed"
@@ -38,19 +53,25 @@ Hangi alan hangi hatayı verdiği net değildi:
 ```
 
 ### 4. HTTP Request Bilgisi Yoktu
+
 Hangi endpoint'te hata olduğu bilinmiyordu:
+
 - Loglarda stack trace var ama hangi path'te olduğu yok
 - Debugging zordu
 
 ### 5. Exception Türleri Eksikti
+
 Handle edilmeyen exception'lar vardı:
+
 - UUID formatı yanlış geldiğinde ne olacak?
 - HTTP method yanlışsa (POST yerine PUT)?
 - Request parametre eksikse?
 - Content-Type yanlışsa?
 
 ### 6. Production'da Güvenlik Riski
+
 Generic Exception handler stack trace ve internal detayları sızdırıyordu:
+
 ```json
 {
   "exception": "NullPointerException",
@@ -66,7 +87,9 @@ Generic Exception handler stack trace ve internal detayları sızdırıyordu:
 ### 1. ErrorResponse DTO
 
 Tip güvenli, yapılandırılmış hata response'u:
+
 ```java
+
 @Schema(description = "Hata yanıt modeli")
 public class ErrorResponse {
     private LocalDateTime timestamp;  // 2024-02-27T10:30:00
@@ -82,6 +105,7 @@ public class ErrorResponse {
 ### 2. ErrorCode Enum
 
 Standardize edilmiş hata kodları:
+
 ```java
 public enum ErrorCode {
     RESOURCE_NOT_FOUND("RESOURCE_NOT_FOUND", HttpStatus.NOT_FOUND),
@@ -93,7 +117,7 @@ public enum ErrorCode {
     METHOD_NOT_ALLOWED("METHOD_NOT_ALLOWED", HttpStatus.METHOD_NOT_ALLOWED),
     DATABASE_ERROR("DATABASE_ERROR", HttpStatus.INTERNAL_SERVER_ERROR),
     INTERNAL_SERVER_ERROR("INTERNAL_SERVER_ERROR", HttpStatus.INTERNAL_SERVER_ERROR);
-    
+
     private final String code;
     private final HttpStatus httpStatus;
     private final String defaultMessage;
@@ -103,7 +127,9 @@ public enum ErrorCode {
 ### 3. Refaktör Edilmiş GlobalExceptionHandler
 
 **Before:**
+
 ```java
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -120,30 +146,32 @@ public class GlobalExceptionHandler {
 ```
 
 **After:**
+
 ```java
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(...);
-    
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
             ResourceNotFoundException ex, HttpServletRequest request) {
-        log.warn("Error occurred - Code: {}, Path: {}, Message: {}", 
-            ErrorCode.RESOURCE_NOT_FOUND.getCode(), request.getRequestURI(), ex.getMessage());
-        
+        log.warn("Error occurred - Code: {}, Path: {}, Message: {}",
+                ErrorCode.RESOURCE_NOT_FOUND.getCode(), request.getRequestURI(), ex.getMessage());
+
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(buildErrorResponse(ErrorCode.RESOURCE_NOT_FOUND, ex.getMessage(), request.getRequestURI()));
+                .body(buildErrorResponse(ErrorCode.RESOURCE_NOT_FOUND, ex.getMessage(), request.getRequestURI()));
     }
-    
+
     // Helper method - DRY!
     private ErrorResponse buildErrorResponse(ErrorCode errorCode, String message, String path) {
         return ErrorResponse.builder()
-            .status(errorCode.getStatusCode())
-            .errorCode(errorCode.getCode())
-            .message(message)
-            .path(path)
-            .error(errorCode.getDefaultMessage())
-            .build();
+                .status(errorCode.getStatusCode())
+                .errorCode(errorCode.getCode())
+                .message(message)
+                .path(path)
+                .error(errorCode.getDefaultMessage())
+                .build();
     }
 }
 ```
@@ -151,18 +179,21 @@ public class GlobalExceptionHandler {
 ### 4. Yeni Exception Türleri
 
 **InvalidRequestException** - 400 Bad Request:
+
 ```java
-throw new InvalidRequestException("email", "Email format is invalid");
+throw new InvalidRequestException("email","Email format is invalid");
 ```
 
 **AccessDeniedException** - 403 Forbidden:
+
 ```java
 throw new AccessDeniedException("You cannot access this task");
 ```
 
 **BusinessRuleViolationException** - 422 Unprocessable Entity:
+
 ```java
-throw new BusinessRuleViolationException("TASK_DEADLINE_PASSED", taskId, "Cannot complete past due date");
+throw new BusinessRuleViolationException("TASK_DEADLINE_PASSED",taskId, "Cannot complete past due date");
 ```
 
 ## Neler Kazandık (What We Gained)
@@ -180,6 +211,7 @@ throw new BusinessRuleViolationException("TASK_DEADLINE_PASSED", taskId, "Cannot
 ### 3. Programatik Hata Ayırt Etme
 
 **Önce:**
+
 ```json
 {
   "status": 404,
@@ -188,6 +220,7 @@ throw new BusinessRuleViolationException("TASK_DEADLINE_PASSED", taskId, "Cannot
 ```
 
 **Sonra:**
+
 ```json
 {
   "status": 404,
@@ -199,6 +232,7 @@ throw new BusinessRuleViolationException("TASK_DEADLINE_PASSED", taskId, "Cannot
 ```
 
 Client artık:
+
 ```javascript
 if (error.errorCode === 'RESOURCE_NOT_FOUND') {
     showTaskNotFoundMessage();
@@ -210,6 +244,7 @@ if (error.errorCode === 'RESOURCE_NOT_FOUND') {
 ### 4. Detaylı Validasyon Hataları
 
 **Önce:**
+
 ```json
 {
   "message": "Validation failed"
@@ -217,6 +252,7 @@ if (error.errorCode === 'RESOURCE_NOT_FOUND') {
 ```
 
 **Sonra:**
+
 ```json
 {
   "status": 400,
@@ -234,6 +270,7 @@ if (error.errorCode === 'RESOURCE_NOT_FOUND') {
 ### 5. Debug Kolaylığı (Path Bilgisi)
 
 Her hata response'unda hangi endpoint'te olduğu net:
+
 ```json
 {
   "path": "/api/v1/tasks/invalid-uuid",
@@ -245,6 +282,7 @@ Her hata response'unda hangi endpoint'te olduğu net:
 ### 6. Güvenlik (Production'da Stack Trace Yok)
 
 **Development:**
+
 ```json
 {
   "status": 500,
@@ -258,51 +296,51 @@ Stack trace ve internal detaylar log'a yazılır ama client'a gitmez!
 
 ### 7. 13 Exception Türü Handle Ediliyor
 
-| Exception | HTTP Status | Senaryo |
-|-----------|-------------|---------|
-| `ResourceNotFoundException` | 404 | Task/User bulunamadı |
-| `UserAlreadyExistsException` | 409 | Aynı username/email mevcut |
-| `InvalidRequestException` | 400 | Geçersiz request parametreleri |
-| `AccessDeniedException` | 403 | Yetkisiz erişim |
-| `BusinessRuleViolationException` | 422 | İş kuralı ihlali (deadline geçmiş) |
-| `MethodArgumentNotValidException` | 400 | @Valid annotasyon hataları |
-| `ConstraintViolationException` | 400 | @NotNull, @Size constraint hataları |
-| `HttpRequestMethodNotSupportedException` | 405 | POST yerine PUT |
-| `NoHandlerFoundException` | 404 | Endpoint yok |
-| `HttpMediaTypeNotSupportedException` | 415 | Content-Type: text/plain |
-| `HttpMessageNotReadableException` | 400 | JSON parse hatası |
-| `MissingServletRequestParameterException` | 400 | Gerekli param eksik |
-| `MethodArgumentTypeMismatchException` | 400 | UUID formatı yanlış |
-| `DataIntegrityViolationException` | 500 | DB unique constraint |
-| `Exception` (generic) | 500 | Bilinmeyen hatalar |
+| Exception                                 | HTTP Status | Senaryo                             |
+|-------------------------------------------|-------------|-------------------------------------|
+| `ResourceNotFoundException`               | 404         | Task/User bulunamadı                |
+| `UserAlreadyExistsException`              | 409         | Aynı username/email mevcut          |
+| `InvalidRequestException`                 | 400         | Geçersiz request parametreleri      |
+| `AccessDeniedException`                   | 403         | Yetkisiz erişim                     |
+| `BusinessRuleViolationException`          | 422         | İş kuralı ihlali (deadline geçmiş)  |
+| `MethodArgumentNotValidException`         | 400         | @Valid annotasyon hataları          |
+| `ConstraintViolationException`            | 400         | @NotNull, @Size constraint hataları |
+| `HttpRequestMethodNotSupportedException`  | 405         | POST yerine PUT                     |
+| `NoHandlerFoundException`                 | 404         | Endpoint yok                        |
+| `HttpMediaTypeNotSupportedException`      | 415         | Content-Type: text/plain            |
+| `HttpMessageNotReadableException`         | 400         | JSON parse hatası                   |
+| `MissingServletRequestParameterException` | 400         | Gerekli param eksik                 |
+| `MethodArgumentTypeMismatchException`     | 400         | UUID formatı yanlış                 |
+| `DataIntegrityViolationException`         | 500         | DB unique constraint                |
+| `Exception` (generic)                     | 500         | Bilinmeyen hatalar                  |
 
 ## Avantajlar (Advantages)
 
-| Avantaj | Açıklama | Ölçülebilir Fayda |
-|---------|----------|-------------------|
-| **DRY** | Tek helper metod, tüm handler'lar kullanıyor | Kod tekrarı: %90 azalma |
-| **Tip Güvenliği** | ErrorResponse class vs Map | Runtime hata: %0 |
-| **Programatik Hatalar** | ErrorCode enum ile makine okunabilir | Client-side handling: Kolay |
-| **Detaylı Validasyon** | Field-level hatalar | UX: Gelişmiş form validasyonu |
-| **Debugging** | Path bilgisi her response'ta | Log analizi: Hızlı |
-| **Güvenlik** | Prod'da stack trace yok | Info leak riski: %0 |
-| **Ölçeklenebilirlik** | Yeni exception eklemek kolay | Yeni handler: 5 satır |
-| **Standartizasyon** | Tüm hatalar aynı yapıda | API consistency: %100 |
-| **Loglama** | Structured logging | Monitoring: Kolay |
-| **Dokümantasyon** | Swagger'da ErrorResponse schema | API doc: Tam |
+| Avantaj                 | Açıklama                                     | Ölçülebilir Fayda             |
+|-------------------------|----------------------------------------------|-------------------------------|
+| **DRY**                 | Tek helper metod, tüm handler'lar kullanıyor | Kod tekrarı: %90 azalma       |
+| **Tip Güvenliği**       | ErrorResponse class vs Map                   | Runtime hata: %0              |
+| **Programatik Hatalar** | ErrorCode enum ile makine okunabilir         | Client-side handling: Kolay   |
+| **Detaylı Validasyon**  | Field-level hatalar                          | UX: Gelişmiş form validasyonu |
+| **Debugging**           | Path bilgisi her response'ta                 | Log analizi: Hızlı            |
+| **Güvenlik**            | Prod'da stack trace yok                      | Info leak riski: %0           |
+| **Ölçeklenebilirlik**   | Yeni exception eklemek kolay                 | Yeni handler: 5 satır         |
+| **Standartizasyon**     | Tüm hatalar aynı yapıda                      | API consistency: %100         |
+| **Loglama**             | Structured logging                           | Monitoring: Kolay             |
+| **Dokümantasyon**       | Swagger'da ErrorResponse schema              | API doc: Tam                  |
 
 ## Dezavantajlar (Disadvantages)
 
-| Dezavantaj | Açıklama | Çözüm/Strateji |
-|------------|----------|----------------|
-| **Kod Karmaşası** | 15 exception handler = uzun class | Metodlar SRP'ye uygun, tek sorumluluk |
-| **Maintenance** | Yeni exception = yeni handler | Business exception'lar için template kullanımı |
-| **Testing** | Exception handler'ları test etmek gerekir | Integration test'ler cover eder |
-| **I18n** | Hata mesajları sabit (İngilizce) | ErrorCode bazlı message.properties dosyası gelebilir |
-| **Stack Trace** | Development'ta detay görmek zor | Debug profile'da detailed logging |
-| **Performance** | Reflection overhead | Neglijible, Spring zaten kullanıyor |
-| **Learning Curve** | Team'ın yeni exception'ları öğrenmesi | Dökümantasyon + örnekler |
-| **Over-Engineering** | Basit proje için fazla mı? | Bu proje için justify ediliyor (13 farklı hata) |
+| Dezavantaj           | Açıklama                                  | Çözüm/Strateji                                       |
+|----------------------|-------------------------------------------|------------------------------------------------------|
+| **Kod Karmaşası**    | 15 exception handler = uzun class         | Metodlar SRP'ye uygun, tek sorumluluk                |
+| **Maintenance**      | Yeni exception = yeni handler             | Business exception'lar için template kullanımı       |
+| **Testing**          | Exception handler'ları test etmek gerekir | Integration test'ler cover eder                      |
+| **I18n**             | Hata mesajları sabit (İngilizce)          | ErrorCode bazlı message.properties dosyası gelebilir |
+| **Stack Trace**      | Development'ta detay görmek zor           | Debug profile'da detailed logging                    |
+| **Performance**      | Reflection overhead                       | Neglijible, Spring zaten kullanıyor                  |
+| **Learning Curve**   | Team'ın yeni exception'ları öğrenmesi     | Dökümantasyon + örnekler                             |
+| **Over-Engineering** | Basit proje için fazla mı?                | Bu proje için justify ediliyor (13 farklı hata)      |
 
 ## Etkilenen Dosyalar
 
@@ -320,11 +358,13 @@ Stack trace ve internal detaylar log'a yazılır ama client'a gitmez!
 ### 1. Resource Not Found (404)
 
 **Request:**
+
 ```bash
 GET /api/v1/tasks/550e8400-e29b-41d4-a716-446655440999
 ```
 
 **Response:**
+
 ```json
 {
   "timestamp": "2024-02-27T10:30:00",
@@ -340,6 +380,7 @@ GET /api/v1/tasks/550e8400-e29b-41d4-a716-446655440999
 ### 2. Validation Error (400)
 
 **Request:**
+
 ```bash
 POST /api/v1/users
 {
@@ -350,6 +391,7 @@ POST /api/v1/users
 ```
 
 **Response:**
+
 ```json
 {
   "timestamp": "2024-02-27T10:35:00",
@@ -369,11 +411,13 @@ POST /api/v1/users
 ### 3. UUID Format Error (400)
 
 **Request:**
+
 ```bash
 GET /api/v1/tasks/not-a-uuid
 ```
 
 **Response:**
+
 ```json
 {
   "timestamp": "2024-02-27T10:40:00",
@@ -391,6 +435,7 @@ GET /api/v1/tasks/not-a-uuid
 ### 4. Conflict (409)
 
 **Request:**
+
 ```bash
 POST /api/v1/users
 {
@@ -400,6 +445,7 @@ POST /api/v1/users
 ```
 
 **Response:**
+
 ```json
 {
   "timestamp": "2024-02-27T10:45:00",
@@ -415,11 +461,13 @@ POST /api/v1/users
 ### 5. Business Rule Violation (422)
 
 **Request:**
+
 ```bash
 PUT /api/v1/tasks/550e8400-e29b-41d4-a716-446655440000/complete
 ```
 
 **Response:**
+
 ```json
 {
   "timestamp": "2024-02-27T10:50:00",
@@ -437,34 +485,34 @@ PUT /api/v1/tasks/550e8400-e29b-41d4-a716-446655440000/complete
 **Soru:** Neden ErrorCode enum kullandık, neden String değil?
 
 - **Cevap:**
-  1. Type-safety: `ErrorCode.RESOURCE_NOT_FOUND` vs `"RESOURCE_NOT_FOUND"` (typo riski)
-  2. Centralization: Tüm hata kodları bir yerde
-  3. HTTP status mapping: Her kodun karşılığı var
-  4. Refactoring safety: Rename edildiğinde compile error verir
+    1. Type-safety: `ErrorCode.RESOURCE_NOT_FOUND` vs `"RESOURCE_NOT_FOUND"` (typo riski)
+    2. Centralization: Tüm hata kodları bir yerde
+    3. HTTP status mapping: Her kodun karşılığı var
+    4. Refactoring safety: Rename edildiğinde compile error verir
 
 **Soru:** Neden Map yerine ErrorResponse DTO?
 
 - **Cevap:**
-  1. Type safety: `response.getErrorCode()` vs `response.get("errorCode")` (cast gerekmez)
-  2. Swagger/OpenAPI dokümantasyonu otomatik oluşur
-  3. Builder pattern ile okunaklı construction
-  4. Validation ve immutability
+    1. Type safety: `response.getErrorCode()` vs `response.get("errorCode")` (cast gerekmez)
+    2. Swagger/OpenAPI dokümantasyonu otomatik oluşur
+    3. Builder pattern ile okunaklı construction
+    4. Validation ve immutability
 
 **Soru:** Neden tüm Spring exception'larını handle ettik?
 
 - **Cevap:**
-  1. User experience: Kullanıcı anlamlı hata mesajı görür
-  2. Debug kolaylığı: Loglarda path bilgisi var
-  3. Security: Bilinmeyen exception'lar generic mesaj döner
-  4. Standardizasyon: Tüm hatalar aynı formatta
+    1. User experience: Kullanıcı anlamlı hata mesajı görür
+    2. Debug kolaylığı: Loglarda path bilgisi var
+    3. Security: Bilinmeyen exception'lar generic mesaj döner
+    4. Standardizasyon: Tüm hatalar aynı formatta
 
 **Soru:** Neden generic Exception handler'da stack trace yok?
 
 - **Cevap:**
-  1. Security: Stack trace internal kod detaylarını sızdırır
-  2. User experience: End user stack trace okumak istemez
-  3. Best practice: Production'da internal detaylar gizlenmeli
-  4. Alternative: Stack trace log'a yazılır, client'a gitmez
+    1. Security: Stack trace internal kod detaylarını sızdırır
+    2. User experience: End user stack trace okumak istemez
+    3. Best practice: Production'da internal detaylar gizlenmeli
+    4. Alternative: Stack trace log'a yazılır, client'a gitmez
 
 ## Gelecek İyileştirmeler (TODO)
 
@@ -501,8 +549,8 @@ PUT /api/v1/tasks/550e8400-e29b-41d4-a716-446655440000/complete
    ```
 
 6. **Hata Sınıflandırma**: 4xx vs 5xx ayrımı loglama seviyesi
-   - 4xx: WARN (client hatası)
-   - 5xx: ERROR (server hatası)
+    - 4xx: WARN (client hatası)
+    - 5xx: ERROR (server hatası)
 
 7. **Problem Detail (RFC 7807)**: Standardize edilmiş hata formatı
    ```json
@@ -558,6 +606,7 @@ Refaktör edilmiş global exception handling:
 - ✅ Clean Code prensiplerine uygun
 
 Artık tüm hatalar:
+
 1. **Standart formatta** - Aynı JSON yapısı
 2. **Programatik olarak ayırt edilebilir** - ErrorCode ile
 3. **Detaylı** - Field-level hatalar
@@ -567,6 +616,7 @@ Artık tüm hatalar:
 ---
 
 **İlgili Dokümanlar:**
+
 - [04-openapi-swagger-integration.md](./04-openapi-swagger-integration.md) - ErrorResponse Swagger dokümantasyonu
 - [05-search-and-filtering.md](./05-search-and-filtering.md) - Search exception handling
 - [06-jpa-specification-guide.md](./06-jpa-specification-guide.md) - Database exception handling
