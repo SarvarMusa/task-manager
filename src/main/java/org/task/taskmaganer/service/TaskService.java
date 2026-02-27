@@ -3,9 +3,11 @@ package org.task.taskmaganer.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.task.taskmaganer.dto.request.CreateTaskRequest;
+import org.task.taskmaganer.dto.request.SearchTaskRequest;
 import org.task.taskmaganer.dto.request.UpdateTaskRequest;
 import org.task.taskmaganer.dto.response.PageResponse;
 import org.task.taskmaganer.dto.response.TaskResponse;
@@ -16,6 +18,7 @@ import org.task.taskmaganer.entity.User;
 import org.task.taskmaganer.exception.ResourceNotFoundException;
 import org.task.taskmaganer.repository.TaskRepository;
 import org.task.taskmaganer.repository.UserRepository;
+import org.task.taskmaganer.specification.TaskSpecification;
 
 import java.util.UUID;
 
@@ -123,6 +126,31 @@ public class TaskService {
             throw new ResourceNotFoundException("User not found with id: " + userId);
         }
         Page<Task> taskPage = taskRepository.findByUserIdAndPriority(userId, priority, pageable);
+        Page<TaskResponse> responsePage = taskPage.map(TaskResponse::new);
+        return new PageResponse<>(responsePage);
+    }
+
+    public PageResponse<TaskResponse> searchTasks(SearchTaskRequest request, Pageable pageable) {
+        Specification<Task> spec = TaskSpecification.withFilters(
+                request.getSearchQuery(),
+                request.getStatus(),
+                request.getPriority(),
+                request.getUserId(),
+                request.getIsActive(),
+                request.getDueDateFrom(),
+                request.getDueDateTo(),
+                request.getCreatedAtFrom(),
+                request.getCreatedAtTo()
+        );
+
+        Page<Task> taskPage = taskRepository.findAll(spec, pageable);
+        Page<TaskResponse> responsePage = taskPage.map(TaskResponse::new);
+        return new PageResponse<>(responsePage);
+    }
+
+    public PageResponse<TaskResponse> searchTasksByQuery(String searchQuery, Pageable pageable) {
+        Specification<Task> spec = TaskSpecification.withSearchQuery(searchQuery);
+        Page<Task> taskPage = taskRepository.findAll(spec, pageable);
         Page<TaskResponse> responsePage = taskPage.map(TaskResponse::new);
         return new PageResponse<>(responsePage);
     }
