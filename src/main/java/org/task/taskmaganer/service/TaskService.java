@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.task.taskmaganer.annotation.EntityId;
 import org.task.taskmaganer.dto.request.CreateTaskRequest;
 import org.task.taskmaganer.dto.request.SearchTaskRequest;
 import org.task.taskmaganer.dto.request.UpdateTaskRequest;
@@ -18,6 +19,7 @@ import org.task.taskmaganer.entity.User;
 import org.task.taskmaganer.exception.ResourceNotFoundException;
 import org.task.taskmaganer.repository.TaskRepository;
 import org.task.taskmaganer.repository.UserRepository;
+import org.task.taskmaganer.annotation.AuditLog;
 import org.task.taskmaganer.specification.TaskSpecification;
 
 import java.util.UUID;
@@ -28,13 +30,16 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final AuditLogService auditLogService;
 
     @Autowired
-    public TaskService(TaskRepository taskRepository, UserRepository userRepository) {
+    public TaskService(TaskRepository taskRepository, UserRepository userRepository, AuditLogService auditLogService) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
+        this.auditLogService = auditLogService;
     }
 
+    @AuditLog(action = "CREATE_TASK", entityType = "TASK")
     public TaskResponse createTask(CreateTaskRequest request) {
         UUID userId = UUID.fromString(request.getUserId());
         User user = userRepository.findById(userId)
@@ -49,6 +54,7 @@ public class TaskService {
         task.setIsActive(true);
 
         Task savedTask = taskRepository.save(task);
+
         return new TaskResponse(savedTask);
     }
 
@@ -146,7 +152,8 @@ public class TaskService {
         return new PageResponse<>(responsePage);
     }
 
-    public TaskResponse updateTask(UUID id, UpdateTaskRequest request) {
+    @AuditLog(action = "UPDATE_TASK", entityType = "TASK")
+    public TaskResponse updateTask(@EntityId UUID id, UpdateTaskRequest request) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
 
@@ -174,7 +181,8 @@ public class TaskService {
         return new TaskResponse(updatedTask);
     }
 
-    public void deleteTask(UUID id) {
+    @AuditLog(action = "DELETE_TASK", entityType = "TASK")
+    public void deleteTask(@EntityId UUID id) {
         Task task = taskRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found with id: " + id));
 

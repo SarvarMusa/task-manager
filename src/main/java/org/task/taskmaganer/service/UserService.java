@@ -10,6 +10,8 @@ import org.task.taskmaganer.dto.response.UserResponse;
 import org.task.taskmaganer.entity.User;
 import org.task.taskmaganer.exception.ResourceNotFoundException;
 import org.task.taskmaganer.exception.UserAlreadyExistsException;
+import org.task.taskmaganer.annotation.AuditLog;
+import org.task.taskmaganer.annotation.EntityId;
 import org.task.taskmaganer.repository.UserRepository;
 
 import java.util.List;
@@ -22,13 +24,16 @@ public class UserService {
     
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditLogService auditLogService;
     
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, AuditLogService auditLogService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.auditLogService = auditLogService;
     }
     
+    @AuditLog(action = "CREATE_USER", entityType = "USER")
     public UserResponse createUser(CreateUserRequest request) {
         validateUserCreation(request);
         
@@ -41,6 +46,9 @@ public class UserService {
         user.setIsActive(true);
         
         User savedUser = userRepository.save(user);
+        
+
+        
         return new UserResponse(savedUser);
     }
     
@@ -74,7 +82,8 @@ public class UserService {
                 .collect(Collectors.toList());
     }
     
-    public UserResponse updateUser(UUID id, UpdateUserRequest request) {
+    @AuditLog(action = "UPDATE_USER", entityType = "USER")
+    public UserResponse updateUser(@EntityId UUID id, UpdateUserRequest request) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         
@@ -102,7 +111,8 @@ public class UserService {
         return new UserResponse(updatedUser);
     }
     
-    public void deleteUser(UUID id) {
+    @AuditLog(action = "DELETE_USER", entityType = "USER")
+    public void deleteUser(@EntityId UUID id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         

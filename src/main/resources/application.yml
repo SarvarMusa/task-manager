@@ -3,6 +3,11 @@ spring:
     active: prod
   application:
     name: task-manager
+
+jwt:
+  secret: dGFzay1tYW5hZ2VyLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbi1nZW5lcmF0aW9uLTIwMjY=
+  expiration: 86400000
+
 logging:
   level:
     web: debug

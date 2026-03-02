@@ -1,0 +1,56 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.idea
+.vscode
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings
+
+# Build output
+target
+!target/*.jar
+*.war
+*.ear
+
+# Maven
+.mvn/maven-wrapper.jar
+
+# Logs
+logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Documentation
+docs
+task-manager-documents
+*.md
+
+# Scripts
+demo-aop-audit.sh
+test-*.sh
+*.sh
+
+# Test files
+api-request
+test-data
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*~

@@ -24,6 +24,9 @@ public class UserResponse {
     @Schema(description = "Soyad", example = "Doe")
     private String lastName;
 
+    @Schema(description = "Kullanıcı rolü", example = "USER")
+    private String role;
+
     @Schema(description = "Kullanıcı aktiflik durumu", example = "true")
     private Boolean isActive;
 
@@ -53,6 +56,7 @@ public class UserResponse {
         this.email = user.getEmail();
         this.firstName = user.getFirstName();
         this.lastName = user.getLastName();
+        this.role = user.getRole() != null ? user.getRole().name() : "USER";
         this.isActive = user.getIsActive();
         this.createdAt = user.getCreatedAt();
         this.updatedAt = user.getUpdatedAt();
@@ -98,10 +102,18 @@ public class UserResponse {
         this.lastName = lastName;
     }
     
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
     public Boolean getIsActive() {
         return isActive;
     }
-    
+
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
     }
