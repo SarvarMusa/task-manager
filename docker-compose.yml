@@ -30,24 +30,63 @@ services:
     container_name: task_manager_app
     restart: always
     environment:
-      # Spring Profile
+      # ==========================================
+      # SPRING CORE CONFIGURATION
+      # ==========================================
       SPRING_PROFILES_ACTIVE: prod
+      SPRING_APPLICATION_NAME: task-manager
       
-      # Database Configuration
+      # ==========================================
+      # DATABASE CONFIGURATION
+      # ==========================================
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_db:5432/task_manager
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: password
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
       
-      # JPA Configuration
+      # ==========================================
+      # JPA / HIBERNATE CONFIGURATION
+      # ==========================================
       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
       SPRING_JPA_SHOW_SQL: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
       
-      # Flyway Configuration
+      # ==========================================
+      # FLYWAY MIGRATION CONFIGURATION
+      # ==========================================
       SPRING_FLYWAY_ENABLED: "true"
       SPRING_FLYWAY_BASELINE_ON_MIGRATE: "true"
+      SPRING_FLYWAY_BASELINE_VERSION: "0"
+      SPRING_FLYWAY_LOCATIONS: classpath:db/migration
+      SPRING_FLYWAY_VALIDATE_ON_MIGRATE: "true"
       
-      # JVM Options (optional tuning)
+      # ==========================================
+      # AOP CONFIGURATION
+      # ==========================================
+      SPRING_AOP_AUTO: "true"
+      SPRING_AOP_PROXY_TARGET_CLASS: "true"
+      
+      # ==========================================
+      # JWT AUTHENTICATION CONFIGURATION
+      # ==========================================
+      JWT_SECRET: dGFzay1tYW5hZ2VyLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbi1nZW5lcmF0aW9uLTIwMjY=
+      JWT_EXPIRATION: "86400000"
+      
+      # ==========================================
+      # LOGGING CONFIGURATION
+      # ==========================================
+      LOGGING_LEVEL_ROOT: WARN
+      LOGGING_LEVEL_APP: INFO
+      LOGGING_LEVEL_SECURITY: WARN
+      LOGGING_LEVEL_HIBERNATE: ERROR
+      LOGGING_FILE_NAME: logs/task-manager.log
+      LOGGING_LOGBACK_ROLLINGPOLICY_MAX_FILE_SIZE: 100MB
+      LOGGING_LOGBACK_ROLLINGPOLICY_MAX_HISTORY: "90"
+      LOGGING_LOGBACK_ROLLINGPOLICY_TOTAL_SIZE_CAP: 50GB
+      
+      # ==========================================
+      # JVM OPTIONS
+      # ==========================================
       JAVA_OPTS: "-Xms512m -Xmx1024m -XX:+UseG1GC"
     ports:
       - "8080:8080"

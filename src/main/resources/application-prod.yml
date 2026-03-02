@@ -1,37 +1,37 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/task_manager
-    username: admin
-    password: password
-    driver-class-name: org.postgresql.Driver
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/task_manager}
+    username: ${SPRING_DATASOURCE_USERNAME:admin}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
   jpa:
     hibernate:
-      ddl-auto: validate
-    show-sql: false
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
+        dialect: ${SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT:org.hibernate.dialect.PostgreSQLDialect}
   flyway:
-    enabled: true
-    baseline-on-migrate: true
-    baseline-version: 0
-    locations: classpath:db/migration
-    validate-on-migrate: true
+    enabled: ${SPRING_FLYWAY_ENABLED:true}
+    baseline-on-migrate: ${SPRING_FLYWAY_BASELINE_ON_MIGRATE:true}
+    baseline-version: ${SPRING_FLYWAY_BASELINE_VERSION:0}
+    locations: ${SPRING_FLYWAY_LOCATIONS:classpath:db/migration}
+    validate-on-migrate: ${SPRING_FLYWAY_VALIDATE_ON_MIGRATE:true}
   aop:
-    auto: true
-    proxy-target-class: true
+    auto: ${SPRING_AOP_AUTO:true}
+    proxy-target-class: ${SPRING_AOP_PROXY_TARGET_CLASS:true}
 
 # Logging configuration for PROD profile
 logging:
   level:
-    root: WARN
-    org.task.taskmaganer: INFO
-    org.springframework.security: WARN
-    org.hibernate: ERROR
+    root: ${LOGGING_LEVEL_ROOT:WARN}
+    org.task.taskmaganer: ${LOGGING_LEVEL_APP:INFO}
+    org.springframework.security: ${LOGGING_LEVEL_SECURITY:WARN}
+    org.hibernate: ${LOGGING_LEVEL_HIBERNATE:ERROR}
   file:
-    name: logs/task-manager.log
+    name: ${LOGGING_FILE_NAME:logs/task-manager.log}
   logback:
     rollingpolicy:
-      max-file-size: 100MB
-      max-history: 90
-      total-size-cap: 50GB
+      max-file-size: ${LOGGING_LOGBACK_ROLLINGPOLICY_MAX_FILE_SIZE:100MB}
+      max-history: ${LOGGING_LOGBACK_ROLLINGPOLICY_MAX_HISTORY:90}
+      total-size-cap: ${LOGGING_LOGBACK_ROLLINGPOLICY_TOTAL_SIZE_CAP:50GB}

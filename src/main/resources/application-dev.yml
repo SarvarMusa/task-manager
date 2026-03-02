@@ -1,36 +1,41 @@
 spring:
   application:
-    name: task-manager
+    name: ${SPRING_APPLICATION_NAME:task-manager}
   datasource:
-    url: jdbc:h2:mem:task-manager
-    driver-class-name: org.h2.Driver
-    username: admin
-    password: password
+    url: ${SPRING_DATASOURCE_URL:jdbc:h2:mem:task-manager}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.h2.Driver}
+    username: ${SPRING_DATASOURCE_USERNAME:admin}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: ${SPRING_JPA_DATABASE_PLATFORM:org.hibernate.dialect.H2Dialect}
     hibernate:
-      ddl-auto: validate
+      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO:validate}
   h2:
     console:
-      enabled: true
-      path: /h2-console
+      enabled: ${SPRING_H2_CONSOLE_ENABLED:true}
+      path: ${SPRING_H2_CONSOLE_PATH:/h2-console}
   flyway:
-    enabled: true
-    baseline-on-migrate: true
-    baseline-version: 0
-    locations: classpath:db/migration
-    validate-on-migrate: true
+    enabled: ${SPRING_FLYWAY_ENABLED:true}
+    baseline-on-migrate: ${SPRING_FLYWAY_BASELINE_ON_MIGRATE:true}
+    baseline-version: ${SPRING_FLYWAY_BASELINE_VERSION:0}
+    locations: ${SPRING_FLYWAY_LOCATIONS:classpath:db/migration}
+    validate-on-migrate: ${SPRING_FLYWAY_VALIDATE_ON_MIGRATE:true}
   aop:
-    auto: true
-    proxy-target-class: true
+    auto: ${SPRING_AOP_AUTO:true}
+    proxy-target-class: ${SPRING_AOP_PROXY_TARGET_CLASS:true}
+
+# JWT Configuration (for dev)
+jwt:
+  secret: ${JWT_SECRET:dGFzay1tYW5hZ2VyLXNlY3JldC1rZXktZm9yLWp3dC10b2tlbi1nZW5lcmF0aW9uLTIwMjY=}
+  expiration: ${JWT_EXPIRATION:86400000}
 
 # Logging configuration for DEV profile
 logging:
   level:
-    root: INFO
-    org.task.taskmaganer: DEBUG
-    org.springframework.web: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    root: ${LOGGING_LEVEL_ROOT:INFO}
+    org.task.taskmaganer: ${LOGGING_LEVEL_APP:DEBUG}
+    org.springframework.web: ${LOGGING_LEVEL_WEB:DEBUG}
+    org.hibernate.SQL: ${LOGGING_LEVEL_HIBERNATE_SQL:DEBUG}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${LOGGING_LEVEL_HIBERNATE_BINDER:TRACE}
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} %highlight(%-5level) [%thread] %cyan(%logger{36}) - %msg%n"
+    console: ${LOGGING_PATTERN_CONSOLE:%d{yyyy-MM-dd HH:mm:ss} %highlight(%-5level) [%thread] %cyan(%logger{36}) - %msg%n}
